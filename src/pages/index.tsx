@@ -39,7 +39,7 @@ export default function Home() {
         >
           <Typography.Title>Sign in</Typography.Title>
           <Button
-            type="default"
+            type="primary"
             block
             icon={<FaGoogle />}
             className="mb-2"
