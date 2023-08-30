@@ -1,11 +1,14 @@
 {
-  "files.exclude": {
-    "**/.git": true,
-    "**/.svn": true,
-    "**/.hg": true,
-    "**/CVS": true,
-    "**/.DS_Store": true,
-    "**/Thumbs.db": true,
-    "**/node_modules": true
-  }
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/node_modules": true
+    },
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "typescript.preferences.autoImportFileExcludePatterns": ["@mui/material/*", "node_modules/*", "@mui/icons-material/*"],
+    "typescript.preferences.useAliasesForRenames": true
 }
