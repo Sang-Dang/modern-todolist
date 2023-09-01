@@ -1,25 +1,23 @@
-import { AvatarImage, AvatarFallback } from '@/components/ui/avatar'
-import { Input } from '@/components/ui/input'
-import { Avatar } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Button } from '@/components/ui/button'
 import {
     DropdownMenu,
-    DropdownMenuTrigger,
     DropdownMenuContent,
+    DropdownMenuGroup,
+    DropdownMenuItem,
     DropdownMenuLabel,
     DropdownMenuSeparator,
-    DropdownMenuGroup,
-    DropdownMenuItem
+    DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
-import { User, CreditCard, Settings, Cloud, Github, Menu, CalendarDays, AlertCircle, Inbox, Calendar } from 'lucide-react'
-import { useSession, signOut } from 'next-auth/react'
+import { Input } from '@/components/ui/input'
+import { cn } from '@/utils/helper'
+import { AlertCircle, Calendar, CalendarDays, Cloud, CreditCard, Github, Inbox, Menu, Settings, User } from 'lucide-react'
+import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
 import Important from '../_tabpages/Important'
-import Today from '../_tabpages/Today'
-import { Button } from '@/components/ui/button'
-import TasksList from '../_tabpages/TasksList'
 import Planned from '../_tabpages/Planned'
-import { cn } from '@/utils/helper'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import TasksList from '../_tabpages/TasksList'
+import Today from '../_tabpages/Today'
 
 export const tabs: Tab[] = [
     {

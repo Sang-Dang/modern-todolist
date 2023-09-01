@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { api } from '@/utils/api'
 import { getDateXAgo } from '@/utils/helper'
-import { taskDeleteInput } from '@/validation/task'
 import { type Task } from '@prisma/client'
 import { Trash } from 'lucide-react'
 import { useEffect, useState } from 'react'
