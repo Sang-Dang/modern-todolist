@@ -1,21 +1,16 @@
-import { Bell, Calendar, Plus } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import DateDropdownSelect from '@/components/features/DateDropdownSelect'
 import { Checkbox } from '@/components/ui/checkbox'
-import { AnimatePresence, motion } from 'framer-motion'
-import { cn } from '@/utils/helper'
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu'
-import { Button } from '../ui/button'
 import { api } from '@/utils/api'
 import { taskInput } from '@/validation/task'
-import { type z } from 'zod'
+import { format } from 'date-fns'
+import isPast from 'date-fns/isPast'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Bell, Calendar, Plus } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { type z } from 'zod'
+import { Button } from '../ui/button'
+import { cn } from '@/utils/helper'
 
 type CreateTaskBoxProps = {
     className?: string
@@ -25,7 +20,9 @@ const CheckboxMotion = motion(Checkbox)
 const PlusIconMotion = motion(Plus)
 
 const defaultTask = {
-    name: ''
+    name: '',
+    dueDate: undefined,
+    reminderDate: undefined
 }
 
 export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
@@ -33,8 +30,10 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
     const [isFocused, setIsFocused] = useState<boolean>(false)
     const [task, setTask] = useState<z.infer<typeof taskInput>>(defaultTask)
 
+    // #region Create task API
+
     const trpc = api.useContext()
-    const { mutate } = api.task.create.useMutation({
+    const { mutate: createTask } = api.task.create.useMutation({
         onSuccess: () => {
             toast.success('Task created')
             setTask(defaultTask)
@@ -49,9 +48,12 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
             return
         }
 
-        mutate(task)
-    }, [task, mutate])
+        createTask(task)
+    }, [task, createTask])
 
+    // #endregion
+
+    // used to automatically create task on enter
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Enter' && isFocused) {
@@ -66,7 +68,7 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
         }
     }, [handleCreateTask, isFocused])
 
-    function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
+    function handleTextInputChange(e: React.ChangeEvent<HTMLInputElement>) {
         if (!e.target.value) {
             setIsOptionsOpen(false)
         } else {
@@ -74,6 +76,12 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
         }
         setTask((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     }
+
+    function handleSelectDateChange(name: string, value: Date | null) {
+        setTask((prev) => ({ ...prev, [name]: value }))
+    }
+
+    // #region Focus handlers for entire input box
 
     function handleFocus() {
         setIsOptionsOpen(true)
@@ -83,6 +91,8 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
     function handleBlur() {
         setIsFocused(false)
     }
+
+    // #endregion
 
     return (
         <div className={cn('flex flex-col gap-0', className)}>
@@ -117,7 +127,7 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
                     name="name"
                     onFocus={handleFocus}
                     onBlur={handleBlur}
-                    onChange={handleInputChange}
+                    onChange={handleTextInputChange}
                     placeholder="Add a task"
                     className={cn(
                         'relative z-10 flex h-14 w-full items-center rounded-md bg-white py-3 pl-[59px] pr-6 text-[17px] shadow-md outline-none placeholder:text-blue-800 placeholder:opacity-80',
@@ -137,41 +147,35 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: -20, opacity: 0 }}
-                        className="relative z-0 flex w-full items-center gap-2 rounded-b-md border-t-[1px] border-t-slate-500/50 bg-blue-100/50 px-6 py-3 shadow-md"
+                        className="relative z-0 flex h-12 w-full items-center gap-2 rounded-b-md border-t-[1px] border-t-slate-500/50 bg-inherit px-6 py-2 shadow-md"
                     >
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="flex h-min w-min items-center gap-2 p-1">
-                                    <Calendar strokeWidth={1.2} size={18} />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuLabel>Due date</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Today</DropdownMenuItem>
-                                <DropdownMenuItem>Tomorrow</DropdownMenuItem>
-                                <DropdownMenuItem>Next week</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Custom</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="flex h-min w-min items-center gap-2 p-1">
-                                    <Bell strokeWidth={1.2} size={18} />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                                <DropdownMenuLabel>Reminder</DropdownMenuLabel>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Today</DropdownMenuItem>
-                                <DropdownMenuItem>Tomorrow</DropdownMenuItem>
-                                <DropdownMenuItem>Next week</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem>Custom</DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                        <Button className="ml-auto h-full" onClick={handleCreateTask}>
+                        <DateDropdownSelect
+                            name="dueDate"
+                            label="Due Date"
+                            value={task.dueDate}
+                            handleChange={handleSelectDateChange}
+                            className="h-full"
+                        >
+                            <Calendar size={16} />
+                            {task.dueDate && (
+                                <span>
+                                    {isPast(task.dueDate) ? 'Overdue' : 'Due'} {format(task.dueDate, 'EEE, MMMM d')}
+                                </span>
+                            )}
+                        </DateDropdownSelect>
+                        <DateDropdownSelect
+                            name="reminderDate"
+                            label="Reminder"
+                            value={task.reminderDate}
+                            handleChange={handleSelectDateChange}
+                            allowTime
+                            allowPast={false}
+                            className="h-full"
+                        >
+                            <Bell size={16} />
+                            {task.reminderDate && <span>{format(task.reminderDate, 'H:mm, EEE, MMMM d')}</span>}
+                        </DateDropdownSelect>
+                        <Button className="ml-auto h-full bg-blue-800 p-1 px-3 text-xs hover:bg-blue-800/80" onClick={handleCreateTask}>
                             Add
                         </Button>
                     </motion.div>

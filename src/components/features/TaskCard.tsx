@@ -1,9 +1,11 @@
 import TaskContextMenu from '@/components/features/TaskContextMenu'
 import { Checkbox } from '@/components/ui/checkbox'
 import { api } from '@/utils/api'
-import { cn } from '@/utils/helper'
+import { cn, join } from '@/utils/helper'
 import { taskCompleteInput } from '@/validation/task'
 import { type Task } from '@prisma/client'
+import { format, isPast } from 'date-fns'
+import { Bell, Calendar } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
 
@@ -46,6 +48,30 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
                 >
                     <div className="flex flex-col">
                         <h5 className={cn('text-[15px]', task.completed && 'text-slate-500 line-through')}>{task.name}</h5>
+                        <caption className="flex items-center gap-3">
+                            {join(
+                                [
+                                    task.dueDate && (
+                                        <div
+                                            key={`caption-1-${task.id}`}
+                                            className={cn('flex items-center gap-1', isPast(task.dueDate) && 'text-red-700')}
+                                        >
+                                            <Calendar size={12} />
+                                            <span className="text-xs">
+                                                {isPast(task.dueDate) ? 'Overdue' : 'Due'} {format(task.dueDate, 'EEE, MMMM d')}
+                                            </span>
+                                        </div>
+                                    ),
+                                    task.reminders.length > 0 && (
+                                        <div key={`caption-2-${task.id}`} className="flex items-center gap-1">
+                                            <Bell size={12} />
+                                            <span className="text-xs">{format(task.reminders[0]!, 'EEE, MMMM d')}</span>
+                                        </div>
+                                    )
+                                ].filter((item) => item),
+                                <span>•</span>
+                            )}
+                        </caption>
                     </div>
                 </div>
                 <Checkbox
