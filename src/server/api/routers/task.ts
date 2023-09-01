@@ -7,7 +7,9 @@ export const taskRouter = createTRPCRouter({
             data: {
                 name: input.name,
                 description: input.description ?? '',
-                ownerId: ctx.session.user.id
+                dueDate: input.dueDate ?? null,
+                ownerId: ctx.session.user.id,
+                reminders: input.reminderDate ? [input.reminderDate] : []
             }
         })
     }),

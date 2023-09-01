@@ -1,6 +1,9 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
@@ -10,15 +13,22 @@ export function getPlural(value: number, string: string, pluralString: string): 
 }
 
 export function formatDate(date: Date): string {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+    const { day, month, dayOfWeek, year } = getDateComponents(date)
+    return `${dayOfWeek}, ${month} ${day}, ${year}`
+}
 
-    const month = months[date.getUTCMonth()]
+export function getDateComponents(date: Date): { month: string; day: number; dayOfWeek: string; year: number } {
+    const month = months[date.getUTCMonth()]!
     const day = date.getUTCDate()
-    const dayOfWeek = days[date.getUTCDay()]
+    const dayOfWeek = days[date.getUTCDay()]!
     const year = date.getUTCFullYear()
 
-    return `${dayOfWeek}, ${month} ${day}, ${year}`
+    return {
+        month,
+        day,
+        dayOfWeek,
+        year
+    }
 }
 
 export function getDateXAgo(pastDate: Date): string {
