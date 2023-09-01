@@ -143,7 +143,7 @@ export default function Homepage({}: Props) {
                         </Button>
                     ))}
                 </aside>
-                <div className="h-full w-full bg-blue-50">{tabs.map((tab) => tab.url === currentTabString && tab.Component)}</div>
+                <div className="h-full w-full bg-[#faf9f8]">{tabs.map((tab) => tab.url === currentTabString && tab.Component)}</div>
             </main>
         </div>
     )

@@ -2,8 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    content-visibility: visible;
+#input-task:-webkit-autofill {
+    display: none;
 }
 
 @layer base {
