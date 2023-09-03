@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import DateDropdownSelect from '@/components/features/DateDropdownSelect'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
@@ -7,8 +7,9 @@ import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/utils/api'
 import { getDateXAgo } from '@/utils/helper'
 import { type Task } from '@prisma/client'
+import { format, isEqual } from 'date-fns'
 import { Bell, Calendar, File, Repeat, Star, Tag, Trash, X } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 
 // open and setOpen because I wanna use setOpen after deleting
@@ -19,12 +20,11 @@ type TaskEditProps = {
 }
 
 export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditProps) {
-    const [isFocusedName, setIsFocusedName] = useState<boolean>(false)
     const [task, setTask] = useState<Task>(inputTask)
+    const [isFocused, setIsFocused] = useState(false)
+    const [hasTextChanged, setHasTextChanged] = useState(false)
 
-    useEffect(() => {
-        setTask(inputTask)
-    }, [inputTask])
+    // #region API functions
 
     const trpc = api.useContext()
     const { mutate: completeTask } = api.task.toggleComplete.useMutation({
@@ -45,6 +45,15 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
             void trpc.task.invalidate()
         }
     })
+    const { mutate: updateTask } = api.task.update.useMutation({
+        onSuccess: () => {
+            task.updatedAt = new Date()
+            setHasTextChanged(false)
+        },
+        onSettled: () => {
+            void trpc.task.invalidate()
+        }
+    })
 
     function toggleCompleteTask(completed: boolean) {
         completeTask({ id: task.id, completed })
@@ -54,9 +63,66 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
         deleteTask({ id: task.id })
     }
 
+    const handleUpdateTask = useCallback(
+        (customTask?: Task) => {
+            if (customTask) {
+                updateTask(customTask)
+            } else {
+                updateTask(task)
+            }
+        },
+        [task, updateTask]
+    )
+
+    // #endregion
+
+    // this function is used for both textarea and input, it does not update the tsak in the database
+    function handleChange(e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) {
+        setTask((prev) => ({ ...prev, [e.target.name]: e.target.value }))
+        setHasTextChanged(true)
+    }
+
+    // this function is used for the date dropdown, it DOES update the task in the database
+    function handleChangeDate(name: string, date: Date | null) {
+        setTask((prev) => ({ ...prev, [name]: date }))
+
+        // update in database using clone of task
+        const clone = { ...task, [name]: date }
+        handleUpdateTask(clone)
+    }
+
     function handleSheetOpen() {
         setOpen(!open)
     }
+
+    function handleFocus() {
+        setIsFocused(true)
+    }
+
+    function handleBlur() {
+        if (hasTextChanged) {
+            setIsFocused(false)
+            handleUpdateTask()
+        }
+    }
+
+    useEffect(() => {
+        setTask(inputTask)
+    }, [inputTask?.id, inputTask])
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'Enter' && isFocused) {
+                handleUpdateTask()
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+        }
+    }, [handleUpdateTask, isFocused])
 
     if (task === undefined) return null
 
@@ -74,14 +140,14 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                                 autoFocus={false}
                                 onClick={() => void toggleCompleteTask(!task.completed)}
                             />
-                            <span
-                                contentEditable
-                                className="ml-4 box-border overflow-visible font-[500] outline-none"
-                                onFocus={() => setIsFocusedName(true)}
-                                onBlur={() => setIsFocusedName(false)}
-                            >
-                                {task.name}
-                            </span>
+                            <textarea
+                                className="ml-4 box-border resize-y overflow-visible bg-transparent font-[500] outline-none"
+                                value={task.name}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                onFocus={handleFocus}
+                                name="name"
+                            />
                         </div>
                         <Button className="h-full w-2/12 rounded-sm bg-white p-0 text-black transition-all hover:bg-slate-100">
                             <Star />
@@ -94,10 +160,12 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                             <Bell size={20} strokeWidth={1.75} />
                             <span className="ml-4">Add reminder</span>
                         </Button>
-                        <Button className="flex h-11 w-full justify-start rounded-sm bg-white px-4 py-7 font-normal text-black transition-all hover:bg-slate-100">
-                            <Calendar size={20} strokeWidth={1.75} />
-                            <span className="ml-4">Due date</span>
-                        </Button>
+                        <DateDropdownSelect allowPast name="dueDate" label="Due date" value={task.dueDate!} handleChange={handleChangeDate}>
+                            <Button className="flex h-11 w-full justify-start rounded-sm bg-white px-4 py-7 font-normal text-black transition-all hover:bg-slate-100">
+                                <Calendar size={20} strokeWidth={1.75} />
+                                <span className="ml-4">{task.dueDate ? 'Due ' + format(task.dueDate, 'EEE, MMMM d') : 'Add due date'}</span>
+                            </Button>
+                        </DateDropdownSelect>
                         <Button className="flex h-11 w-full justify-start rounded-sm bg-white px-4 py-7 font-normal text-black transition-all hover:bg-slate-100">
                             <Repeat size={20} strokeWidth={1.75} />
                             <span className="ml-4">Repeat</span>
@@ -115,6 +183,11 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                         className="resize-none border-0 outline-none ring-0 focus-visible:border-0 focus-visible:outline-none focus-visible:ring-0"
                         rows={5}
                         placeholder="Description..."
+                        value={task.description ?? ''}
+                        onFocus={handleFocus}
+                        onBlur={handleBlur}
+                        name="description"
+                        onChange={handleChange}
                     />
                 </main>
                 <Separator />
@@ -125,9 +198,9 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                         </Button>
                     </SheetClose>
                     <span className="text-sm text-slate-500">
-                        {task.updatedAt === task.createdAt
-                            ? `Last updated ${getDateXAgo(task.updatedAt!)}`
-                            : `Created ${getDateXAgo(task.createdAt!)}`}
+                        {isEqual(task.createdAt!, task.updatedAt!)
+                            ? `Created ${getDateXAgo(task.createdAt!)}`
+                            : `Last updated ${getDateXAgo(task.updatedAt!)}`}
                     </span>
                     <Button variant="ghost" onClick={handleDeleteTask}>
                         <Trash size={20} strokeWidth={1.5} />
