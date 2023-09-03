@@ -25,6 +25,10 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
     const [task, setTask] = useState<Task>(inputTask)
     const [hasTextChanged, setHasTextChanged] = useState(false)
 
+    useEffect(() => {
+        setTask(inputTask)
+    }, [inputTask, inputTask?.id])
+
     // #region API functions
 
     const trpc = api.useContext()
@@ -116,10 +120,6 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
     }
 
     useEffect(() => {
-        setTask(inputTask)
-    }, [inputTask, inputTask?.id])
-
-    useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Enter' && hasTextChanged) {
                 handleUpdateTask(task)
@@ -156,6 +156,8 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                                 onChange={handleChangeText}
                                 onBlur={handleTextBlur}
                                 name="name"
+                                aria-autocomplete="none"
+                                autoComplete="false"
                             />
                         </div>
                         <Button
