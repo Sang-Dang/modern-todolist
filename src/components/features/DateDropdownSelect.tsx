@@ -14,7 +14,7 @@ import ReactDatePicker from 'react-datepicker'
 type DateDropdownSelectProps = {
     name: string
     label: string
-    value: Date | undefined
+    value: Date | undefined | null
     handleChange: (name: string, date: Date | null) => void
     className?: string
     allowTime?: boolean

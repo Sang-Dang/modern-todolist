@@ -4,7 +4,7 @@ export const taskInput = z.object({
     name: z.string().min(1),
     description: z.string().optional(),
     dueDate: z.date().optional(),
-    reminderDate: z.date().optional()
+    reminders: z.date().optional()
 })
 
 export const taskCompleteInput = z.object({
@@ -21,7 +21,7 @@ export const taskUpdateInput = z.object({
     name: z.string().min(1),
     description: z.string().nullable(),
     dueDate: z.date().nullable(),
-    reminders: z.array(z.date())
+    reminders: z.date().nullable()
 })
 
 // optional: don't update in database
@@ -30,5 +30,8 @@ export const taskUpdateInputPartial = z.object({
     id: z.string().cuid(),
     name: z.string().min(1, 'Name cannot be empty.').optional(),
     description: z.string().optional().nullable(),
-    dueDate: z.date().optional().nullable()
+    dueDate: z.date().optional().nullable(),
+    reminders: z.date().optional().nullable(),
+    completed: z.boolean().optional(),
+    starred: z.boolean().optional()
 })

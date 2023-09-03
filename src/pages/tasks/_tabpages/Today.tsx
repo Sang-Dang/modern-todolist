@@ -1,11 +1,11 @@
 import CreateTaskBox from '@/components/features/CreateTaskBox'
 import TaskCard from '@/components/features/TaskCard'
 import TaskEdit from '@/components/features/TaskEdit'
+import Time from '@/components/time'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { api } from '@/utils/api'
-import { formatDate } from '@/utils/helper'
 import { type Task } from '@prisma/client'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowDownUp, CalendarDays, MoreHorizontal } from 'lucide-react'
@@ -45,7 +45,9 @@ export default function Today({}: Props) {
                         Sort
                     </Button>
                 </div>
-                <div className="text-xs text-slate-500">{formatDate(new Date())}</div>
+                <div className="text-xs text-slate-500" key={new Date().toDateString()}>
+                    <Time dateProps="HH:mm:ss, EEEE, MMMM d" />
+                </div>
             </header>
             <CreateTaskBox className="px-8" />
             <ScrollArea className="px-8">
