@@ -1,6 +1,9 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs))
 }
@@ -9,16 +12,28 @@ export function getPlural(value: number, string: string, pluralString: string): 
     return value === 1 ? `${value} ${string}` : `${value} ${pluralString}`
 }
 
-export function formatDate(date: Date): string {
-    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
-    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
+export function join(comp: React.ReactNode[], separator: React.ReactNode) {
+    if (comp.length === 0) return null
+    return comp.reduce((prev, curr) => [prev, separator, curr])
+}
 
-    const month = months[date.getUTCMonth()]
+export function formatDate(date: Date): string {
+    const { day, month, dayOfWeek, year } = getDateComponents(date)
+    return `${dayOfWeek}, ${month} ${day}, ${year}`
+}
+
+export function getDateComponents(date: Date): { month: string; day: number; dayOfWeek: string; year: number } {
+    const month = months[date.getUTCMonth()]!
     const day = date.getUTCDate()
-    const dayOfWeek = days[date.getUTCDay()]
+    const dayOfWeek = days[date.getUTCDay()]!
     const year = date.getUTCFullYear()
 
-    return `${dayOfWeek}, ${month} ${day}, ${year}`
+    return {
+        month,
+        day,
+        dayOfWeek,
+        year
+    }
 }
 
 export function getDateXAgo(pastDate: Date): string {
@@ -28,7 +43,7 @@ export function getDateXAgo(pastDate: Date): string {
     if (list.days !== 0) return `${getPlural(list.days, 'day', 'days')} ago`
     if (list.hours !== 0) return `${getPlural(list.hours, 'hour', 'hours')} ago`
     if (list.minutes !== 0) return `${getPlural(list.minutes, 'minute', 'minutes')} ago`
-    return `${getPlural(list.seconds, 'second', 'seconds')} ago`
+    return `a few seconds ago`
 }
 
 export function getDateDifference(
