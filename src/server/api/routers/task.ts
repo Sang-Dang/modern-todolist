@@ -13,7 +13,7 @@ export const taskRouter = createTRPCRouter({
                 description: input.description ?? '',
                 dueDate: input.dueDate ?? null,
                 ownerId: ctx.session.user.id,
-                reminders: input.reminderDate ? [input.reminderDate] : [],
+                reminders: input.reminders,
                 createdAt: currentDate,
                 updatedAt: currentDate
             }
@@ -31,18 +31,6 @@ export const taskRouter = createTRPCRouter({
             where: {
                 id: input.id,
                 ownerId: ctx.session.user.id
-            }
-        })
-    }),
-    toggleComplete: protectedProcedure.input(taskCompleteInput).mutation(async ({ ctx, input }) => {
-        return await ctx.prisma.task.update({
-            where: {
-                id: input.id,
-                ownerId: ctx.session.user.id
-            },
-            data: {
-                completed: input.completed,
-                updatedAt: new Date()
             }
         })
     }),
@@ -66,7 +54,10 @@ export const taskRouter = createTRPCRouter({
                 name: input.name === undefined ? existingTask.name : input.name,
                 description: input.description === undefined ? existingTask.description : input.description,
                 dueDate: input.dueDate === undefined ? existingTask.dueDate : input.dueDate,
-                updatedAt: new Date()
+                updatedAt: new Date(),
+                reminders: input.reminders === undefined ? existingTask.reminders : input.reminders,
+                completed: input.completed === undefined ? existingTask.completed : input.completed,
+                starred: input.starred === undefined ? existingTask.starred : input.starred
             }
         })
     })

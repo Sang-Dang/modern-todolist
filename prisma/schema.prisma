@@ -63,14 +63,15 @@ model VerificationToken {
 }
 
 model Task {
-    id          String     @id @default(cuid())
+    id          String    @id @default(cuid())
     name        String
-    description String?    @default("")
-    createdAt   DateTime?  @default(now())
-    updatedAt   DateTime?  @default(now())
-    reminders   DateTime[] @default([])
+    description String?   @default("")
+    createdAt   DateTime? @default(now())
+    updatedAt   DateTime? @default(now())
+    reminders   DateTime?
     dueDate     DateTime?
-    completed   Boolean    @default(false)
+    completed   Boolean   @default(false)
+    starred     Boolean   @default(false)
 
     owner   User   @relation(fields: [ownerId], references: [id])
     ownerId String

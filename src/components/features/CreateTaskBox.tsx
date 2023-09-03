@@ -166,14 +166,14 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
                         <DateDropdownSelect
                             name="reminderDate"
                             label="Reminder"
-                            value={task.reminderDate}
+                            value={task.reminders}
                             handleChange={handleSelectDateChange}
                             allowTime
                             allowPast={false}
                             className="h-full"
                         >
                             <Bell size={16} />
-                            {task.reminderDate && <span>{format(task.reminderDate, 'H:mm, EEE, MMMM d')}</span>}
+                            {task.reminders && <span>{format(task.reminders, 'H:mm, EEE, MMMM d')}</span>}
                         </DateDropdownSelect>
                         <Button className="ml-auto h-full bg-blue-800 p-1 px-3 text-xs hover:bg-blue-800/80" onClick={handleCreateTask}>
                             Add
