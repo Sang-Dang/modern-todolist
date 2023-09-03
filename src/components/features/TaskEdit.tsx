@@ -2,15 +2,17 @@ import DateDropdownSelect from '@/components/features/DateDropdownSelect'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { api } from '@/utils/api'
 import { getDateXAgo } from '@/utils/helper'
+import { taskUpdateInputPartial } from '@/validation/task'
 import { type Task } from '@prisma/client'
 import { format, isEqual } from 'date-fns'
 import { Bell, Calendar, File, Repeat, Star, Tag, Trash, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
+import { ZodError, type z } from 'zod'
 
 // open and setOpen because I wanna use setOpen after deleting
 type TaskEditProps = {
@@ -21,7 +23,6 @@ type TaskEditProps = {
 
 export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditProps) {
     const [task, setTask] = useState<Task>(inputTask)
-    const [isFocused, setIsFocused] = useState(false)
     const [hasTextChanged, setHasTextChanged] = useState(false)
 
     // #region API functions
@@ -47,7 +48,7 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
     })
     const { mutate: updateTask } = api.task.update.useMutation({
         onSuccess: () => {
-            task.updatedAt = new Date()
+            task.updatedAt = new Date() // set here for instant update
             setHasTextChanged(false)
         },
         onSettled: () => {
@@ -63,20 +64,48 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
         deleteTask({ id: task.id })
     }
 
-    const handleUpdateTask = useCallback(
-        (customTask?: Task) => {
-            if (customTask) {
-                updateTask(customTask)
-            } else {
-                updateTask(task)
+    const handleUpdateTaskPartial = useCallback(
+        (name: string, value: unknown) => {
+            const updateParams = {
+                id: task.id,
+                [name]: value
+            } as z.infer<typeof taskUpdateInputPartial>
+            try {
+                taskUpdateInputPartial.parse(updateParams)
+                updateTask(updateParams)
+            } catch (error) {
+                if (error instanceof ZodError) {
+                    const errors = error.issues
+                    errors.forEach((error) => {
+                        toast.error(error.message)
+                        setTask((prev) => ({ ...prev, [error.path[0] as string]: 'Error...' }))
+                    })
+                }
             }
         },
-        [task, updateTask]
+        [task?.id, updateTask]
+    )
+
+    const handleUpdateTask = useCallback(
+        (task: Task) => {
+            try {
+                taskUpdateInputPartial.parse(task)
+                updateTask(task)
+            } catch (error) {
+                if (error instanceof ZodError) {
+                    const errors = error.issues
+                    errors.forEach((error) => {
+                        toast.error(error.message)
+                    })
+                }
+            }
+        },
+        [updateTask]
     )
 
     // #endregion
 
-    // this function is used for both textarea and input, it does not update the tsak in the database
+    // this function is used for both textarea and input, it DOES NOT update the task in the database
     function handleChange(e: React.ChangeEvent<HTMLTextAreaElement> | React.ChangeEvent<HTMLInputElement>) {
         setTask((prev) => ({ ...prev, [e.target.name]: e.target.value }))
         setHasTextChanged(true)
@@ -85,35 +114,23 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
     // this function is used for the date dropdown, it DOES update the task in the database
     function handleChangeDate(name: string, date: Date | null) {
         setTask((prev) => ({ ...prev, [name]: date }))
-
-        // update in database using clone of task
-        const clone = { ...task, [name]: date }
-        handleUpdateTask(clone)
+        handleUpdateTaskPartial(name, date)
     }
 
-    function handleSheetOpen() {
-        setOpen(!open)
-    }
-
-    function handleFocus() {
-        setIsFocused(true)
-    }
-
-    function handleBlur() {
+    function handleTextBlur(e: React.FocusEvent<HTMLTextAreaElement> | React.FocusEvent<HTMLInputElement>) {
         if (hasTextChanged) {
-            setIsFocused(false)
-            handleUpdateTask()
+            handleUpdateTaskPartial(e.target.name, e.target.value)
         }
     }
 
     useEffect(() => {
         setTask(inputTask)
-    }, [inputTask?.id, inputTask])
+    }, [inputTask, inputTask.id])
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === 'Enter' && isFocused) {
-                handleUpdateTask()
+            if (e.key === 'Enter' && hasTextChanged) {
+                handleUpdateTask(task)
             }
         }
 
@@ -122,12 +139,12 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
         return () => {
             window.removeEventListener('keydown', handleKeyDown)
         }
-    }, [handleUpdateTask, isFocused])
+    }, [handleUpdateTask, hasTextChanged, task])
 
     if (task === undefined) return null
 
     return (
-        <Sheet open={open} onOpenChange={handleSheetOpen}>
+        <Sheet open={open} onOpenChange={() => setOpen(!open)}>
             <SheetContent className="flex flex-col gap-3 bg-[#faf9f8]" showCloseButton={false}>
                 <SheetHeader>
                     <SheetTitle className="flex w-full gap-2">
@@ -140,12 +157,11 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                                 autoFocus={false}
                                 onClick={() => void toggleCompleteTask(!task.completed)}
                             />
-                            <textarea
+                            <input
                                 className="ml-4 box-border resize-y overflow-visible bg-transparent font-[500] outline-none"
                                 value={task.name}
                                 onChange={handleChange}
-                                onBlur={handleBlur}
-                                onFocus={handleFocus}
+                                onBlur={handleTextBlur}
                                 name="name"
                             />
                         </div>
@@ -184,8 +200,7 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                         rows={5}
                         placeholder="Description..."
                         value={task.description ?? ''}
-                        onFocus={handleFocus}
-                        onBlur={handleBlur}
+                        onBlur={handleTextBlur}
                         name="description"
                         onChange={handleChange}
                     />

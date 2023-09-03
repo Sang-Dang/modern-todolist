@@ -43,7 +43,7 @@ export function getDateXAgo(pastDate: Date): string {
     if (list.days !== 0) return `${getPlural(list.days, 'day', 'days')} ago`
     if (list.hours !== 0) return `${getPlural(list.hours, 'hour', 'hours')} ago`
     if (list.minutes !== 0) return `${getPlural(list.minutes, 'minute', 'minutes')} ago`
-    return `${getPlural(list.seconds, 'second', 'seconds')} ago`
+    return `a few seconds ago`
 }
 
 export function getDateDifference(
