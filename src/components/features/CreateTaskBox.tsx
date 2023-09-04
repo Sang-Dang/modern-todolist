@@ -2,10 +2,10 @@ import DateDropdownSelect from '@/components/features/DateDropdownSelect'
 import { Checkbox } from '@/components/ui/checkbox'
 import { api } from '@/utils/api'
 import { taskInput } from '@/validation/task'
-import { format } from 'date-fns'
+import { format, isToday } from 'date-fns'
 import isPast from 'date-fns/isPast'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Bell, Calendar, Plus } from 'lucide-react'
+import { Bell, Calendar, Plus, Star } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { type z } from 'zod'
@@ -14,18 +14,20 @@ import { cn } from '@/utils/helper'
 
 type CreateTaskBoxProps = {
     className?: string
+    defaultTask?: z.infer<typeof taskInput>
 }
 
 const CheckboxMotion = motion(Checkbox)
 const PlusIconMotion = motion(Plus)
 
-const defaultTask = {
-    name: '',
-    dueDate: undefined,
-    reminderDate: undefined
-}
-
-export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
+export default function CreateTaskBox({
+    className,
+    defaultTask = {
+        name: '',
+        dueDate: undefined,
+        reminders: undefined
+    }
+}: CreateTaskBoxProps) {
     const [isOptionsOpen, setIsOptionsOpen] = useState<boolean>(false)
     const [isFocused, setIsFocused] = useState<boolean>(false)
     const [task, setTask] = useState<z.infer<typeof taskInput>>(defaultTask)
@@ -79,6 +81,10 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
 
     function handleSelectDateChange(name: string, value: Date | null) {
         setTask((prev) => ({ ...prev, [name]: value }))
+    }
+
+    function handleStarredChange(target: boolean) {
+        setTask((prev) => ({ ...prev, starred: target }))
     }
 
     // #region Focus handlers for entire input box
@@ -159,12 +165,12 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
                             <Calendar size={16} />
                             {task.dueDate && (
                                 <span>
-                                    {isPast(task.dueDate) ? 'Overdue' : 'Due'} {format(task.dueDate, 'EEE, MMMM d')}
+                                    {isPast(task.dueDate) && !isToday(task.dueDate) ? 'Overdue' : 'Due'} {format(task.dueDate, 'EEE, MMMM d')}
                                 </span>
                             )}
                         </DateDropdownSelect>
                         <DateDropdownSelect
-                            name="reminderDate"
+                            name="reminders"
                             label="Reminder"
                             value={task.reminders}
                             handleChange={handleSelectDateChange}
@@ -175,6 +181,13 @@ export default function CreateTaskBox({ className }: CreateTaskBoxProps) {
                             <Bell size={16} />
                             {task.reminders && <span>{format(task.reminders, 'H:mm, EEE, MMMM d')}</span>}
                         </DateDropdownSelect>
+                        <Button
+                            className={cn('flex h-full items-center gap-2 p-2 text-xs')}
+                            variant="ghost"
+                            onClick={() => handleStarredChange(!task.starred)}
+                        >
+                            <Star size={16} fill={task.starred ? 'true' : 'transparent'} />
+                        </Button>
                         <Button className="ml-auto h-full bg-blue-800 p-1 px-3 text-xs hover:bg-blue-800/80" onClick={handleCreateTask}>
                             Add
                         </Button>

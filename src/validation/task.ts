@@ -4,7 +4,8 @@ export const taskInput = z.object({
     name: z.string().min(1),
     description: z.string().optional(),
     dueDate: z.date().optional(),
-    reminders: z.date().optional()
+    reminders: z.date().optional(),
+    starred: z.boolean().optional()
 })
 
 export const taskCompleteInput = z.object({

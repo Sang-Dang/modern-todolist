@@ -5,7 +5,7 @@ import { api } from '@/utils/api'
 import { cn, join } from '@/utils/helper'
 import { taskUpdateInputPartial } from '@/validation/task'
 import { type Task } from '@prisma/client'
-import { format, isPast } from 'date-fns'
+import { format, isPast, isToday } from 'date-fns'
 import { Bell, Calendar, Star } from 'lucide-react'
 import React from 'react'
 import toast from 'react-hot-toast'
@@ -60,11 +60,15 @@ export default function TaskCard({ task, onClick }: TaskCardProps) {
                                     task.dueDate && (
                                         <div
                                             key={`caption-1-${task.id}`}
-                                            className={cn('flex items-center gap-1', isPast(task.dueDate) && 'text-red-700')}
+                                            className={cn(
+                                                'flex items-center gap-1',
+                                                isPast(task.dueDate) && !isToday(task.dueDate) && 'text-red-700'
+                                            )}
                                         >
                                             <Calendar size={12} />
                                             <span className="text-xs">
-                                                {isPast(task.dueDate) ? 'Overdue' : 'Due'} {format(task.dueDate, 'EEE, MMMM d')}
+                                                {isPast(task.dueDate) && !isToday(task.dueDate) ? 'Overdue' : 'Due'}{' '}
+                                                {format(task.dueDate, 'EEE, MMMM d')}
                                             </span>
                                         </div>
                                     ),
