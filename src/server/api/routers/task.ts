@@ -2,7 +2,7 @@
 // DO NOT ENABLE. NULL AND UNDEFINED ARE DIFFERENT....
 
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
-import { taskCompleteInput, taskDeleteInput, taskInput, taskUpdateInputPartial } from '@/validation/task'
+import { taskDeleteInput, taskInput, taskUpdateInputPartial } from '@/validation/task'
 
 export const taskRouter = createTRPCRouter({
     create: protectedProcedure.input(taskInput).mutation(async ({ ctx, input }) => {
@@ -14,6 +14,8 @@ export const taskRouter = createTRPCRouter({
                 dueDate: input.dueDate ?? null,
                 ownerId: ctx.session.user.id,
                 reminders: input.reminders,
+                starred: input.starred ?? false,
+                completed: false,
                 createdAt: currentDate,
                 updatedAt: currentDate
             }
