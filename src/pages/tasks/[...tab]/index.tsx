@@ -18,6 +18,7 @@ import Important from '../_tabpages/Important'
 import Planned from '../_tabpages/Planned'
 import TasksList from '../_tabpages/TasksList'
 import Today from '../_tabpages/Today'
+import NotificationsButton from '@/components/notifications-button'
 
 export const tabs: Tab[] = [
     {
@@ -79,50 +80,56 @@ export default function Homepage({}: Props) {
                     </h1>
                 </div>
                 <Input className="w-4/12" placeholder={'Search'} />
-                <DropdownMenu>
-                    <DropdownMenuTrigger>
-                        <Avatar>
-                            <AvatarImage src={session.user.image!} />
-                            <AvatarFallback></AvatarFallback>
-                        </Avatar>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>My account</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <User className="mr-2 h-4 w-4" />
-                                <span>Profile</span>
+                <div className="flex items-center gap-4">
+                    <NotificationsButton userId={session.user.id} />
+                    <DropdownMenu>
+                        <DropdownMenuTrigger>
+                            <Avatar className="">
+                                <AvatarImage src={session.user.image!} />
+                                <AvatarFallback></AvatarFallback>
+                            </Avatar>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>My account</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <User className="mr-2 h-4 w-4" />
+                                    <span>Profile</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <CreditCard className="mr-2 h-4 w-4" />
+                                    <span>Billing</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Settings className="mr-2 h-4 w-4" />
+                                    <span>Settings</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuGroup>
+                                <DropdownMenuItem className="cursor-pointer">
+                                    <Cloud className="mr-2 h-4 w-4" />
+                                    <span>API</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    className="cursor-pointer"
+                                    onClick={() => window.open('https://github.com/Sang-Dang/modern-todolist', '__blank')}
+                                >
+                                    <Github className="mr-2 h-4 w-4" />
+                                    <span>GitHub</span>
+                                </DropdownMenuItem>
+                            </DropdownMenuGroup>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                                className="foOnt-bold cursor-pointer bg-red-500 text-white"
+                                onClick={() => void signOut({ callbackUrl: '/' })}
+                            >
+                                Log out
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <CreditCard className="mr-2 h-4 w-4" />
-                                <span>Billing</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <Settings className="mr-2 h-4 w-4" />
-                                <span>Settings</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuGroup>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <Cloud className="mr-2 h-4 w-4" />
-                                <span>API</span>
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="cursor-pointer">
-                                <Github className="mr-2 h-4 w-4" />
-                                <span>GitHub</span>
-                            </DropdownMenuItem>
-                        </DropdownMenuGroup>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                            className="cursor-pointer bg-red-500 font-bold text-white"
-                            onClick={() => void signOut({ callbackUrl: '/' })}
-                        >
-                            Log out
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
             </header>
             <main className="relative flex h-full">
                 <aside className="relative z-10 flex h-full w-96 flex-col bg-white py-3 shadow-md">
