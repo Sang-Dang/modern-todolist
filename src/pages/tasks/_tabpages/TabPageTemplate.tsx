@@ -60,6 +60,7 @@ export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: 
         if (query.data) {
             remindersContext.addMany(query.data, remindersContext.callbacks.taskReminderCallback)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query.isLoading])
 
     const tasks = useMemo(() => {

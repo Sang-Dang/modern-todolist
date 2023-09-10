@@ -1,5 +1,4 @@
-import { type ClassValue, clsx } from 'clsx'
-import { NextRouter, useRouter } from 'next/router'
+import { clsx, type ClassValue } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
