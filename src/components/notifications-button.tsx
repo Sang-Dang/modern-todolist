@@ -1,5 +1,4 @@
 import { Button } from '@/components/ui/button'
-import { createSubscriber } from '@/lib/novu/general'
 import { api } from '@/utils/api'
 import { cn } from '@/utils/helper'
 import { NovuProvider, PopoverNotificationCenter, type IMessage } from '@novu/notification-center'

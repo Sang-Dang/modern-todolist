@@ -1,6 +1,3 @@
-import addDays from 'date-fns/addDays'
-import subDays from 'date-fns/subDays'
-import React from 'react'
 import ReactDatePicker from 'react-datepicker'
 
 type Props = {
