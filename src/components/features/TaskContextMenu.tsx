@@ -1,33 +1,25 @@
-import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuTrigger } from '@/components/ui/context-menu'
-import { api } from '@/utils/api'
+import { ContextMenu, ContextMenuContent, ContextMenuItem, ContextMenuLabel, ContextMenuTrigger } from '@/components/ui/context-menu'
+import { useTaskActions } from '@/context/TaskActionsContext'
+import { getDateXAgo } from '@/utils/helper'
+import { type Task } from '@prisma/client'
 import React from 'react'
-import toast from 'react-hot-toast'
 
 export type TaskContextMenuProps = {
     children: React.ReactNode
-    taskId: string
+    task: Task
 }
 
-export default function TaskContextMenu({ children, taskId }: TaskContextMenuProps) {
-    const trpc = api.useContext()
-    const { mutate: deleteTask } = api.task.delete.useMutation({
-        onSuccess: () => {
-            toast.success('Task deleted')
-        },
-        onSettled: () => {
-            void trpc.task.invalidate()
-        }
-    })
-
-    function handleDeleteTask() {
-        deleteTask({ id: taskId })
-    }
+export default function TaskContextMenu({ children, task }: TaskContextMenuProps) {
+    const { remove } = useTaskActions()
 
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
             <ContextMenuContent>
-                <ContextMenuItem onClick={handleDeleteTask}>Delete</ContextMenuItem>
+                <ContextMenuLabel>Created {getDateXAgo(task.createdAt!)}</ContextMenuLabel>
+                <ContextMenuItem onClick={() => void remove(task.id)} className="bg-red-500 font-bold text-white">
+                    Delete
+                </ContextMenuItem>
             </ContextMenuContent>
         </ContextMenu>
     )

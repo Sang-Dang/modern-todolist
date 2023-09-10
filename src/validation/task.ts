@@ -4,7 +4,8 @@ export const taskInput = z.object({
     name: z.string().min(1),
     description: z.string().optional(),
     dueDate: z.date().optional(),
-    reminders: z.date().optional()
+    reminders: z.date().optional(),
+    starred: z.boolean().optional()
 })
 
 export const taskCompleteInput = z.object({
@@ -14,14 +15,6 @@ export const taskCompleteInput = z.object({
 
 export const taskDeleteInput = z.object({
     id: z.string().cuid()
-})
-
-export const taskUpdateInput = z.object({
-    id: z.string().cuid(),
-    name: z.string().min(1),
-    description: z.string().nullable(),
-    dueDate: z.date().nullable(),
-    reminders: z.date().nullable()
 })
 
 // optional: don't update in database

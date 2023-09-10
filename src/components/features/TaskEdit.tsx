@@ -4,15 +4,13 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
-import { api } from '@/utils/api'
+import { useTaskActions } from '@/context/TaskActionsContext'
 import { cn, getDateXAgo } from '@/utils/helper'
-import { taskUpdateInputPartial } from '@/validation/task'
 import { type Task } from '@prisma/client'
 import { format, isEqual } from 'date-fns'
 import { Bell, Calendar, File, Repeat, Star, Tag, Trash, X } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { ZodError, type z } from 'zod'
 
 // open and setOpen because I wanna use setOpen after deleting
 type TaskEditProps = {
@@ -24,70 +22,43 @@ type TaskEditProps = {
 export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditProps) {
     const [task, setTask] = useState<Task>(inputTask)
     const [hasTextChanged, setHasTextChanged] = useState(false)
+    const { remove, updatePartial, update } = useTaskActions()
+
+    useEffect(() => {
+        setTask(inputTask)
+    }, [inputTask, inputTask?.id])
 
     // #region API functions
 
-    const trpc = api.useContext()
-    const { mutate: deleteTask } = api.task.delete.useMutation({
-        onSuccess: () => {
-            toast.success('Task deleted')
-            setOpen(false)
-        },
-        onSettled: () => {
-            void trpc.task.invalidate()
-        }
-    })
-    const { mutate: updateTask } = api.task.update.useMutation({
-        onSuccess: () => {
-            task.updatedAt = new Date() // set here for instant update
-            setHasTextChanged(false)
-        },
-        onSettled: () => {
-            void trpc.task.invalidate()
-        }
-    })
-
-    function handleDeleteTask() {
-        deleteTask({ id: task.id })
+    async function handleDeleteTask() {
+        await remove(task.id)
+        setOpen(false)
     }
 
     const handleUpdateTaskPartial = useCallback(
-        (name: string, value: unknown) => {
-            const updateParams = {
-                id: task.id,
-                [name]: value
-            } as z.infer<typeof taskUpdateInputPartial>
+        async (name: string, value: unknown) => {
             try {
-                taskUpdateInputPartial.parse(updateParams)
-                updateTask(updateParams)
+                await updatePartial(task.id, name, value)
             } catch (error) {
-                if (error instanceof ZodError) {
-                    const errors = error.issues
-                    errors.forEach((error) => {
-                        toast.error(error.message)
-                        // setTask((prev) => ({ ...prev, [error.path[0] as string]: 'Error...' }))
-                    })
+                if (error instanceof Error) {
+                    toast.error(error.message)
                 }
             }
         },
-        [task?.id, updateTask]
+        [task, updatePartial]
     )
 
     const handleUpdateTask = useCallback(
-        (task: Task) => {
+        async (task: Task) => {
             try {
-                taskUpdateInputPartial.parse(task)
-                updateTask(task)
+                await update(task)
             } catch (error) {
-                if (error instanceof ZodError) {
-                    const errors = error.issues
-                    errors.forEach((error) => {
-                        toast.error(error.message)
-                    })
+                if (error instanceof Error) {
+                    toast.error(error.message)
                 }
             }
         },
-        [updateTask]
+        [update]
     )
 
     // #endregion
@@ -100,29 +71,25 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
 
     function handleChange(name: string, value: unknown) {
         setTask((prev) => ({ ...prev, [name]: value }))
-        handleUpdateTaskPartial(name, value)
+        void handleUpdateTaskPartial(name, value)
     }
 
     // this function is used for the date dropdown, it DOES update the task in the database
     function handleChangeDate(name: string, date: Date | null) {
         setTask((prev) => ({ ...prev, [name]: date }))
-        handleUpdateTaskPartial(name, date)
+        void handleUpdateTaskPartial(name, date)
     }
 
     function handleTextBlur(e: React.FocusEvent<HTMLTextAreaElement> | React.FocusEvent<HTMLInputElement>) {
         if (hasTextChanged) {
-            handleUpdateTaskPartial(e.target.name, e.target.value)
+            void handleUpdateTaskPartial(e.target.name, e.target.value)
         }
     }
 
     useEffect(() => {
-        setTask(inputTask)
-    }, [inputTask, inputTask?.id])
-
-    useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Enter' && hasTextChanged) {
-                handleUpdateTask(task)
+                void handleUpdateTask(task)
             }
         }
 
@@ -156,6 +123,8 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                                 onChange={handleChangeText}
                                 onBlur={handleTextBlur}
                                 name="name"
+                                aria-autocomplete="none"
+                                autoComplete="false"
                             />
                         </div>
                         <Button
@@ -240,7 +209,7 @@ export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditPro
                             ? `Created ${getDateXAgo(task.createdAt!)}`
                             : `Last updated ${getDateXAgo(task.updatedAt!)}`}
                     </span>
-                    <Button variant="ghost" onClick={handleDeleteTask}>
+                    <Button variant="ghost" onClick={() => void handleDeleteTask()}>
                         <Trash size={20} strokeWidth={1.5} />
                     </Button>
                 </footer>
