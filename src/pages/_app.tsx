@@ -1,3 +1,5 @@
+import RemindersContextProvider from '@/context/RemindersContext'
+import TaskActionsContextProvider from '@/context/TaskActionsContext'
 import '@/styles/globals.css'
 import { api } from '@/utils/api'
 import { type Session } from 'next-auth'
@@ -18,8 +20,12 @@ const MyApp: AppType<{ session: Session | null }> = ({ Component, pageProps: { s
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
             </Head>
             <SessionProvider session={session}>
-                <Component {...pageProps} />
-                <Toaster position="bottom-center" />
+                <RemindersContextProvider>
+                    <TaskActionsContextProvider>
+                        <Component {...pageProps} />
+                        <Toaster position="bottom-center" />
+                    </TaskActionsContextProvider>
+                </RemindersContextProvider>
             </SessionProvider>
         </>
     )

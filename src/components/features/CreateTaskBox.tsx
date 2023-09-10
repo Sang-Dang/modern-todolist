@@ -1,17 +1,16 @@
 import DateDropdownSelect from '@/components/features/DateDropdownSelect'
 import { Checkbox } from '@/components/ui/checkbox'
-import { api } from '@/utils/api'
+import { useTaskActions } from '@/context/TaskActionsContext'
+import { cn } from '@/utils/helper'
 import { taskInput } from '@/validation/task'
 import { format, isToday } from 'date-fns'
 import isPast from 'date-fns/isPast'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Bell, Calendar, Plus, Star } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
-import toast from 'react-hot-toast'
 import { type z } from 'zod'
 import { Button } from '../ui/button'
-import { cn } from '@/utils/helper'
-import { scheduleReminder } from '@/lib/scheduler'
+import toast from 'react-hot-toast'
 
 type CreateTaskBoxProps = {
     className?: string
@@ -32,35 +31,20 @@ export default function CreateTaskBox({
     const [isOptionsOpen, setIsOptionsOpen] = useState<boolean>(false)
     const [isFocused, setIsFocused] = useState<boolean>(false)
     const [task, setTask] = useState<z.infer<typeof taskInput>>(defaultTask)
+    const { create } = useTaskActions()
 
     // #region Create task API
 
-    const trpc = api.useContext()
-    const { mutateAsync: createTask } = api.task.create.useMutation({
-        onSuccess: () => {
-            toast.success('Task created')
-            setTask(defaultTask)
-        },
-        onSettled: () => {
-            void trpc.task.invalidate()
-        }
-    })
     const handleCreateTask = useCallback(async () => {
-        if (!taskInput.safeParse(task).success) {
-            toast.error('Invalid task name')
-            return
-        }
-
-        const response = await createTask(task)
-        if (response && task?.reminders) {
-            const schedule = scheduleReminder(response, () => {
-                toast.success(`Your task "${task.name}" is due now!`)
-            })
-            if (!schedule) {
-                toast.error('Failed to schedule reminder')
+        try {
+            await create(task)
+            setTask(defaultTask)
+        } catch (error) {
+            if (error instanceof Error) {
+                toast.error(error.message)
             }
         }
-    }, [task, createTask])
+    }, [create, task, defaultTask])
 
     // #endregion
 

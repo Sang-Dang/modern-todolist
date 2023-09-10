@@ -3,22 +3,53 @@ import { createContext, useContext, useState } from 'react'
 import schedule from 'node-schedule'
 import { type Task } from '@prisma/client'
 import { isBefore } from 'date-fns'
+import { getDateDifference } from '@/utils/helper'
+import toast from 'react-hot-toast'
+import { api } from '@/utils/api'
 
 type RemindersContextProviderProps = {
     children: React.ReactNode
 }
 
 const RemindersContext = createContext({
-    add: (task: Task, callback: (task: Task) => void) => {
+    add: (_task: Task, _callback: (task: Task) => void) => {
         /** */
     },
-    remove: (id: string) => {
+    remove: (_id: string) => {
         /** */
+    },
+    addMany: (_tasks: Task[], _callback: (task: Task) => void): { succeeded: number; failed: number } => {
+        return { succeeded: 0, failed: 0 }
+    },
+    update: (_id: string, _task: Task, _callback: (task: Task) => void) => {
+        /** */
+    },
+    callbacks: {
+        taskReminderCallback: (_task: Task) => {
+            /** */
+        }
     }
 })
 
 export default function RemindersContextProvider({ children }: RemindersContextProviderProps) {
     const [reminders, setReminders] = useState<Map<string, schedule.Job>>(new Map())
+
+    const { mutate: remind } = api.notification.remindSelf.useMutation()
+
+    function taskReminderCallback(task: Task) {
+        if (task.dueDate) {
+            const { days, hours, minutes, seconds } = getDateDifference(task.dueDate, new Date())
+
+            remind({ taskId: task.id, name: task.name })
+            toast.success(
+                `Your task "${task.name}" is due in ${
+                    days !== 0 ? `${days} days` : hours !== 0 ? `${hours} hours` : minutes !== 0 ? `${minutes} minutes` : `${seconds} seconds`
+                }`
+            )
+        } else {
+            toast.success(`This is a reminder for: "${task.name}"!`)
+        }
+    }
 
     function add(task: Task, callback: (task: Task) => void): boolean {
         if (task.reminders && !reminders.has(task.id)) {
@@ -39,7 +70,21 @@ export default function RemindersContextProvider({ children }: RemindersContextP
         return false
     }
 
-    // function addReminders() {}
+    function addMany(tasks: Task[], callback: (task: Task) => void): { succeeded: number; failed: number } {
+        let succeeded = 0,
+            failed = 0
+
+        tasks.forEach((task) => {
+            const result = add(task, callback)
+            if (result) {
+                succeeded++
+            } else {
+                failed++
+            }
+        })
+
+        return { succeeded, failed }
+    }
 
     function remove(id: string) {
         const job = reminders.get(id)
@@ -55,9 +100,16 @@ export default function RemindersContextProvider({ children }: RemindersContextP
         }
     }
 
-    // function updateReminder() {}
+    function update(id: string, task: Task, callback: (task: Task) => void) {
+        remove(id)
+        add(task, callback)
+    }
 
-    return <RemindersContext.Provider value={{ add, remove }}>{children}</RemindersContext.Provider>
+    return (
+        <RemindersContext.Provider value={{ add, remove, addMany, update, callbacks: { taskReminderCallback } }}>
+            {children}
+        </RemindersContext.Provider>
+    )
 }
 
 export function useReminders() {

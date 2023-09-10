@@ -13,13 +13,14 @@ import {
     DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { useReminders } from '@/context/RemindersContext'
 import { api } from '@/utils/api'
 import { cn } from '@/utils/helper'
 import { type taskInput } from '@/validation/task'
 import { type Task } from '@prisma/client'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowDown, ArrowDownUp, ArrowUp, MoreHorizontal } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { type z } from 'zod'
 
 type TabPageTemplateProps = {
@@ -36,22 +37,30 @@ type sortingValueProps = {
     label: string
 }
 
-type sortingValues = 'createdAt' | 'name' | 'starred'
+type sortingValues = 'createdAt' | 'name' | 'starred' | 'updatedAt'
 
 const sortingValuesObject = {
     createdAt: { label: 'Created at' },
+    updatedAt: { label: 'Updated at' },
     name: { label: 'Name' },
     starred: { label: 'Importance' }
 } as Record<sortingValues, sortingValueProps>
 
 export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: TabPageTemplateProps) {
     const query = api.task.all.useQuery()
+    const remindersContext = useReminders()
     const completed = useMemo(() => query.data?.filter((task: Task) => task.completed === true), [query.data])
     const [sortingValue, setSortingValue] = useState<sortingValues>('createdAt')
     const [reversed, setReversed] = useState<boolean>(true)
 
     const [taskEditorOpen, setTaskEditorOpen] = useState<boolean>(false)
     const [currentTaskEdit, setCurrentTaskEdit] = useState<Task | undefined>(undefined)
+
+    useEffect(() => {
+        if (query.data) {
+            remindersContext.addMany(query.data, remindersContext.callbacks.taskReminderCallback)
+        }
+    }, [query.isLoading])
 
     const tasks = useMemo(() => {
         if (query.isLoading) {

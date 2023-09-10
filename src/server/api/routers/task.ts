@@ -3,11 +3,14 @@
 
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
 import { taskDeleteInput, taskInput, taskUpdateInputPartial } from '@/validation/task'
+import { Task } from '@prisma/client'
+import { z } from 'zod'
 
 export const taskRouter = createTRPCRouter({
     create: protectedProcedure.input(taskInput).mutation(async ({ ctx, input }) => {
         const currentDate = new Date()
-        return await ctx.prisma.task.create({
+        console.log(input.reminders)
+        const result = await ctx.prisma.task.create({
             data: {
                 name: input.name,
                 description: input.description ?? '',
@@ -20,6 +23,8 @@ export const taskRouter = createTRPCRouter({
                 updatedAt: currentDate
             }
         })
+        console.log(result)
+        return result
     }),
     all: protectedProcedure.query(async ({ ctx }) => {
         return await ctx.prisma.task.findMany({

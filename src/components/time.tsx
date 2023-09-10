@@ -6,8 +6,6 @@ type Props = {
 }
 
 export default function Time({ dateProps }: Props) {
-    console.log('render Time')
-
     const [time, setTime] = React.useState<Date>(new Date())
 
     useEffect(() => {

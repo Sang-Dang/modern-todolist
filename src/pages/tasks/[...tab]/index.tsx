@@ -1,3 +1,4 @@
+import NotificationsButton from '@/components/notifications-button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,7 +19,6 @@ import Important from '../_tabpages/Important'
 import Planned from '../_tabpages/Planned'
 import TasksList from '../_tabpages/TasksList'
 import Today from '../_tabpages/Today'
-import NotificationsButton from '@/components/notifications-button'
 
 export const tabs: Tab[] = [
     {
@@ -49,7 +49,7 @@ export const tabs: Tab[] = [
 
 type Props = {}
 
-export default function Homepage({}: Props) {
+const Homepage = ({}: Props) => {
     const router = useRouter()
     const currentTab = router.query.tab! as string[]
     const currentTabString = '/tasks/'.concat(currentTab?.join('/'))
@@ -153,3 +153,5 @@ export default function Homepage({}: Props) {
         </div>
     )
 }
+
+export default Homepage
