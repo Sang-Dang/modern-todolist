@@ -16,15 +16,16 @@ declare module 'next-auth' {
     interface Session extends DefaultSession {
         user: DefaultSession['user'] & {
             id: string
+            role: UserRole
             // ...other properties
             // role: UserRole;
         }
     }
 
-    // interface User {
-    //   // ...other properties
-    //   // role: UserRole;
-    // }
+    interface User {
+        // ...other properties
+        role: UserRole
+    }
 }
 
 /**
@@ -39,9 +40,13 @@ export const authOptions: NextAuthOptions = {
                 ...session,
                 user: {
                     ...session.user,
-                    id: user.id
+                    id: user.id,
+                    role: user.role
                 }
             }
+        },
+        signIn(params) {
+            return true
         }
     },
     adapter: PrismaAdapter(prisma),

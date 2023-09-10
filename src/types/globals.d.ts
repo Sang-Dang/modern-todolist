@@ -7,4 +7,11 @@ declare global {
         url: string
         Component?: React.ReactNode
     }
+
+    type UserRole = 'admin' | 'user'
+
+    type responseBundle = {
+        success: boolean
+        message: string[]
+    }
 }

@@ -17,14 +17,6 @@ export const taskDeleteInput = z.object({
     id: z.string().cuid()
 })
 
-export const taskUpdateInput = z.object({
-    id: z.string().cuid(),
-    name: z.string().min(1),
-    description: z.string().nullable(),
-    dueDate: z.date().nullable(),
-    reminders: z.date().nullable()
-})
-
 // optional: don't update in database
 // nullable: set db value to null
 export const taskUpdateInputPartial = z.object({

@@ -47,7 +47,7 @@ model User {
     email         String?   @unique
     emailVerified DateTime?
     image         String?
-    role          UserRole  @default(USER)
+    role          String    @default("user")
 
     accounts Account[]
     sessions Session[]
@@ -94,9 +94,4 @@ model Tag {
     name     String
     color    String
     TaskTags TaskTags[]
-}
-
-enum UserRole {
-    USER
-    ADMIN
 }

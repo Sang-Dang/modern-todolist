@@ -4,7 +4,14 @@ import TaskEdit from '@/components/features/TaskEdit'
 import Time from '@/components/time'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { api } from '@/utils/api'
 import { cn } from '@/utils/helper'
@@ -92,6 +99,7 @@ export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: 
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-44">
                             <DropdownMenuLabel>Sort by</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
                             {Object.entries(sortingValuesObject).map(([key, value]) => (
                                 <DropdownMenuItem
                                     key={key}

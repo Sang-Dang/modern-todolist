@@ -11,6 +11,7 @@ import toast from 'react-hot-toast'
 import { type z } from 'zod'
 import { Button } from '../ui/button'
 import { cn } from '@/utils/helper'
+import { scheduleReminder } from '@/lib/scheduler'
 
 type CreateTaskBoxProps = {
     className?: string
@@ -35,7 +36,7 @@ export default function CreateTaskBox({
     // #region Create task API
 
     const trpc = api.useContext()
-    const { mutate: createTask } = api.task.create.useMutation({
+    const { mutateAsync: createTask } = api.task.create.useMutation({
         onSuccess: () => {
             toast.success('Task created')
             setTask(defaultTask)
@@ -44,13 +45,21 @@ export default function CreateTaskBox({
             void trpc.task.invalidate()
         }
     })
-    const handleCreateTask = useCallback(() => {
+    const handleCreateTask = useCallback(async () => {
         if (!taskInput.safeParse(task).success) {
             toast.error('Invalid task name')
             return
         }
 
-        createTask(task)
+        const response = await createTask(task)
+        if (response && task?.reminders) {
+            const schedule = scheduleReminder(response, () => {
+                toast.success(`Your task "${task.name}" is due now!`)
+            })
+            if (!schedule) {
+                toast.error('Failed to schedule reminder')
+            }
+        }
     }, [task, createTask])
 
     // #endregion
@@ -59,7 +68,7 @@ export default function CreateTaskBox({
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'Enter' && isFocused) {
-                handleCreateTask()
+                void handleCreateTask()
             }
         }
 
@@ -188,7 +197,7 @@ export default function CreateTaskBox({
                         >
                             <Star size={16} fill={task.starred ? 'true' : 'transparent'} />
                         </Button>
-                        <Button className="ml-auto h-full bg-blue-800 p-1 px-3 text-xs hover:bg-blue-800/80" onClick={handleCreateTask}>
+                        <Button className="ml-auto h-full bg-blue-800 p-1 px-3 text-xs hover:bg-blue-800/80" onClick={() => void handleCreateTask()}>
                             Add
                         </Button>
                     </motion.div>

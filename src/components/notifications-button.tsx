@@ -1,7 +1,10 @@
 import { Button } from '@/components/ui/button'
+import { createSubscriber } from '@/lib/novu/general'
+import { api } from '@/utils/api'
 import { cn } from '@/utils/helper'
 import { NovuProvider, PopoverNotificationCenter, type IMessage } from '@novu/notification-center'
 import { Bell } from 'lucide-react'
+import { useEffect } from 'react'
 
 type NotificationsButtonProps = {
     userId: string
@@ -9,6 +12,12 @@ type NotificationsButtonProps = {
 }
 
 export default function NotificationsButton({ userId, className }: NotificationsButtonProps) {
+    const { mutate: createSubscriber } = api.notification.createSubscriber.useMutation()
+
+    useEffect(() => {
+        createSubscriber()
+    }, [createSubscriber])
+
     function onNotificationClick(message: IMessage) {
         // your logic to handle the notification click
         if (message?.cta?.data?.url) {
