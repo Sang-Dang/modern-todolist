@@ -1,12 +1,15 @@
-import TaskContextMenu from '@/modules/TabPageTemplate/components/TaskContextMenu'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useTaskActions } from '@/context/TaskActionsContext'
 import { cn, join } from '@/utils/helper'
 import { type Task } from '@prisma/client'
-import { format, isPast, isToday } from 'date-fns'
+import format from 'date-fns/format'
+import isPast from 'date-fns/isPast'
+import isToday from 'date-fns/isToday'
 import { Bell, Calendar, Star } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import toast from 'react-hot-toast'
+const TaskContextMenu = dynamic(() => import('@/modules/TabPageTemplate/components/TaskContextMenu'), { ssr: false })
 
 export type TaskCardProps = {
     task: Task

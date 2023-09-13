@@ -2,7 +2,7 @@
 import { createContext, useContext, useState } from 'react'
 import schedule from 'node-schedule'
 import { type Task } from '@prisma/client'
-import { isBefore } from 'date-fns'
+import isBefore from 'date-fns/isBefore'
 import { getDateDifference } from '@/utils/helper'
 import toast from 'react-hot-toast'
 import { api } from '@/utils/api'

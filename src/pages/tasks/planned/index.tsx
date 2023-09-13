@@ -4,9 +4,7 @@ import { Calendar } from 'lucide-react'
 import React from 'react'
 import { api } from '@/utils/api'
 
-type Props = {}
-
-const index = withTabLayout((props: Props) => {
+const index = withTabLayout(() => {
     const query = api.task.all.useQuery({ fetchType: 'planned' })
 
     return (

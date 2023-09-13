@@ -1,5 +1,5 @@
 import { type Task } from '@prisma/client'
-import { isBefore } from 'date-fns'
+import isBefore from 'date-fns/isBefore'
 import schedule from 'node-schedule'
 
 const scheduledJobs = new Map()
