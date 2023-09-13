@@ -5,7 +5,6 @@ declare global {
         Icon: LucideIcon
         title: string
         url: string
-        Component?: React.ReactNode
     }
 
     type UserRole = 'admin' | 'user'

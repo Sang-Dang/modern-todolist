@@ -1,4 +1,6 @@
-import DateDropdownSelect from '@/components/features/DateDropdownSelect'
+import { type Task } from '@prisma/client'
+import { createContext, useState, type ReactNode, type ComponentType, useContext } from 'react'
+import DateDropdownSelect from '@/components/DateDropdownSelect'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
@@ -6,11 +8,63 @@ import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from '@/comp
 import { Textarea } from '@/components/ui/textarea'
 import { useTaskActions } from '@/context/TaskActionsContext'
 import { cn, getDateXAgo } from '@/utils/helper'
-import { type Task } from '@prisma/client'
 import { format, isEqual } from 'date-fns'
 import { Bell, Calendar, File, Repeat, Star, Tag, Trash, X } from 'lucide-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import toast from 'react-hot-toast'
+
+type Props = {
+    children: ReactNode
+}
+
+const TaskEditContext = createContext({
+    handleEditTask: (_task: Task) => {
+        // do nothing
+    }
+})
+
+export function TaskEditContextProvider({ children }: Props) {
+    const [currentTask, setCurrentTask] = useState<Task | undefined>(undefined)
+    const [open, setOpen] = useState<boolean>(false)
+
+    function handleEditTask(task: Task) {
+        setCurrentTask(task)
+        setOpen(true)
+    }
+
+    return (
+        <TaskEditContext.Provider value={{ handleEditTask }}>
+            {children}
+            {currentTask && <TaskEdit task={currentTask} open={open} setOpen={() => setOpen((prev) => !prev)} />}
+        </TaskEditContext.Provider>
+    )
+}
+
+export default function withTaskEditContext<
+    T extends
+        | JSX.IntrinsicAttributes
+        | {
+              tasks: Task[]
+          }
+>(Component: ComponentType<T>) {
+    return function WithTaskEditContext(props: T) {
+        return (
+            <TaskEditContextProvider>
+                <Component {...props} />
+            </TaskEditContextProvider>
+        )
+    }
+}
+
+export function useTaskEdit() {
+    const context = useContext(TaskEditContext)
+
+    if (context === undefined) {
+        throw new Error('useTaskEdit must be used within a TaskEditContextProvider')
+    }
+
+    return context
+}
 
 // open and setOpen because I wanna use setOpen after deleting
 type TaskEditProps = {
@@ -19,7 +73,7 @@ type TaskEditProps = {
     setOpen: (open: boolean) => void
 }
 
-export default function TaskEdit({ task: inputTask, open, setOpen }: TaskEditProps) {
+export function TaskEdit({ task: inputTask, open, setOpen }: TaskEditProps) {
     const [task, setTask] = useState<Task>(inputTask)
     const [hasTextChanged, setHasTextChanged] = useState(false)
     const { remove, updatePartial, update } = useTaskActions()

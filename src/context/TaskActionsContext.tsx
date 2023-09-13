@@ -43,7 +43,7 @@ export default function TaskActionsContextProvider({ children }: TaskActionsCont
             void trpc.task.all.invalidate()
         },
         onSuccess: () => {
-            toast.success('Task updated')
+            // toast.success('Task updated')
         }
     })
     const { mutateAsync: deleteTaskAPI } = api.task.delete.useMutation({

@@ -6,7 +6,7 @@ await import('./src/env.mjs')
 
 /** @type {import("next").NextConfig} */
 const config = {
-    reactStrictMode: false,
+    reactStrictMode: true,
 
     /**
      * If you are using `appDir` then you must comment the below `i18n` config out.
@@ -16,6 +16,16 @@ const config = {
     i18n: {
         locales: ['en'],
         defaultLocale: 'en'
+    },
+    // eslint-disable-next-line @typescript-eslint/require-await
+    redirects: async () => {
+        return [
+            {
+                source: '/tasks',
+                destination: '/tasks/today',
+                permanent: true
+            }
+        ]
     }
 }
 

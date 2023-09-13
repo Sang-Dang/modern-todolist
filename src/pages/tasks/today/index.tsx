@@ -1,16 +1,16 @@
-import TabPageTemplate from '@/pages/tasks/_tabpages/TabPageTemplate'
-import { isToday } from 'date-fns'
+import TabPageTemplate from '@/modules/TabPageTemplate'
+import withTabLayout from '@/components/layout/withTabLayout'
+import { api } from '@/utils/api'
 import { CalendarDays } from 'lucide-react'
-import React from 'react'
 
-type Props = {}
+const index = withTabLayout(() => {
+    const query = api.task.all.useQuery({ fetchType: 'today' })
 
-export default function Today({}: Props) {
     return (
         <TabPageTemplate
-            filterFn={(task) => task.dueDate !== null && isToday(task.dueDate)}
             icon={<CalendarDays strokeWidth={1.5} size={25} />}
             title="Today"
+            fetchData={query}
             defaultTask={{
                 name: '',
                 description: '',
@@ -19,4 +19,6 @@ export default function Today({}: Props) {
             }}
         />
     )
-}
+})
+
+export default index

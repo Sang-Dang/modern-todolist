@@ -1,4 +1,4 @@
-import DateDropdownSelect from '@/components/features/DateDropdownSelect'
+import DateDropdownSelect from '@/components/DateDropdownSelect'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useTaskActions } from '@/context/TaskActionsContext'
 import { cn } from '@/utils/helper'
@@ -9,7 +9,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Bell, Calendar, Plus, Star } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import { type z } from 'zod'
-import { Button } from '../ui/button'
+import { Button } from '../../../components/ui/button'
 import toast from 'react-hot-toast'
 
 type CreateTaskBoxProps = {

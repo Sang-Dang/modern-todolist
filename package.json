@@ -71,19 +71,5 @@
     },
     "ct3aMetadata": {
         "initVersion": "7.19.0"
-    },
-    "prettier": {
-        "singleQuote": true,
-        "printWidth": 150,
-        "proseWrap": "always",
-        "tabWidth": 4,
-        "useTabs": false,
-        "trailingComma": "none",
-        "bracketSpacing": true,
-        "jsxBracketSameLine": false,
-        "semi": false,
-        "plugins": [
-            "prettier-plugin-tailwindcss"
-        ]
     }
 }

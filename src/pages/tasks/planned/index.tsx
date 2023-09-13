@@ -1,15 +1,19 @@
-import TabPageTemplate from '@/pages/tasks/_tabpages/TabPageTemplate'
+import withTabLayout from '@/components/layout/withTabLayout'
+import TabPageTemplate from '@/modules/TabPageTemplate'
 import { Calendar } from 'lucide-react'
 import React from 'react'
+import { api } from '@/utils/api'
 
 type Props = {}
 
-export default function Planned({}: Props) {
+const index = withTabLayout((props: Props) => {
+    const query = api.task.all.useQuery({ fetchType: 'planned' })
+
     return (
         <TabPageTemplate
-            filterFn={(task) => task.dueDate !== null}
             icon={<Calendar strokeWidth={1.5} size={25} />}
             title="Planned"
+            fetchData={query}
             defaultTask={{
                 name: '',
                 description: '',
@@ -19,4 +23,6 @@ export default function Planned({}: Props) {
             }}
         />
     )
-}
+})
+
+export default index
