@@ -3,9 +3,7 @@ import TabPageTemplate from '@/modules/TabPageTemplate'
 import { AlertCircle } from 'lucide-react'
 import { api } from '@/utils/api'
 
-type Props = {}
-
-const index = withTabLayout((props: Props) => {
+const index = withTabLayout(() => {
     const query = api.task.all.useQuery({ fetchType: 'starred' })
 
     return (

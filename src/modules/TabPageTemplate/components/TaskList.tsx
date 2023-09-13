@@ -1,8 +1,7 @@
-import TaskCard from '@/modules/TabPageTemplate/components/TaskCard'
 import withTaskEditContext, { useTaskEdit } from '@/context/TaskEditContext'
+import TaskCard from '@/modules/TabPageTemplate/components/TaskCard'
 import { type Task } from '@prisma/client'
 import { AnimatePresence, motion } from 'framer-motion'
-import React from 'react'
 
 const MotionTaskCard = motion(TaskCard)
 

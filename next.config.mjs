@@ -3,6 +3,11 @@
  * for Docker builds.
  */
 await import('./src/env.mjs')
+import withBundlerAnalyzer from '@next/bundle-analyzer'
+
+const bundlerAnalyzer = withBundlerAnalyzer({
+    enabled: false
+})
 
 /** @type {import("next").NextConfig} */
 const config = {
@@ -29,4 +34,4 @@ const config = {
     }
 }
 
-export default config
+export default bundlerAnalyzer(config)
