@@ -2,7 +2,8 @@
 // DO NOT ENABLE. NULL AND UNDEFINED ARE DIFFERENT....
 
 import { createTRPCRouter, protectedProcedure } from '@/server/api/trpc'
-import { taskDeleteInput, taskInput, taskUpdateInputPartial } from '@/validation/task'
+import { allInput, taskDeleteInput, taskInput, taskUpdateInputPartial } from '@/validation/task'
+import { type Task } from '@prisma/client'
 
 export const taskRouter = createTRPCRouter({
     create: protectedProcedure.input(taskInput).mutation(async ({ ctx, input }) => {
@@ -22,12 +23,61 @@ export const taskRouter = createTRPCRouter({
         })
         return result
     }),
-    all: protectedProcedure.query(async ({ ctx }) => {
-        return await ctx.prisma.task.findMany({
+    all: protectedProcedure.input(allInput).query(async ({ ctx, input }) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let whereVal = {} as { [keyof in keyof Omit<Task, 'ownerId' | 'completed'>]?: any }
+        switch (input.fetchType) {
+            case 'starred': {
+                whereVal = {
+                    starred: true
+                }
+                break
+            }
+            case 'today': {
+                const todayBefore = new Date()
+                const todayAfter = new Date()
+
+                todayBefore.setHours(0, 0, 0, 0)
+                todayAfter.setHours(23, 59, 59, 999)
+
+                whereVal = {
+                    dueDate: {
+                        gte: todayBefore,
+                        lte: todayAfter
+                    }
+                }
+                break
+            }
+            case 'planned': {
+                whereVal = {
+                    dueDate: {
+                        not: null
+                    }
+                }
+                break
+            }
+        }
+
+        const incompleted = await ctx.prisma.task.findMany({
             where: {
-                ownerId: ctx.session.user.id
+                ownerId: ctx.session.user.id,
+                completed: false,
+                ...whereVal
             }
         })
+
+        const completed = await ctx.prisma.task.findMany({
+            where: {
+                ownerId: ctx.session.user.id,
+                completed: true,
+                ...whereVal
+            }
+        })
+
+        return {
+            incompleted,
+            completed
+        }
     }),
     delete: protectedProcedure.input(taskDeleteInput).mutation(async ({ ctx, input }) => {
         return await ctx.prisma.task.delete({

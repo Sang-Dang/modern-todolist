@@ -1,6 +1,5 @@
-import CreateTaskBox from '@/components/features/CreateTaskBox'
-import TaskCard from '@/components/features/TaskCard'
-import TaskEdit from '@/components/features/TaskEdit'
+import CreateTaskBox from '@/modules/TabPageTemplate/components/CreateTaskBox'
+import TaskList from '@/modules/TabPageTemplate/components/TaskList'
 import Time from '@/components/time'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
@@ -14,24 +13,29 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useReminders } from '@/context/RemindersContext'
-import { api } from '@/utils/api'
 import { cn } from '@/utils/helper'
 import { type taskInput } from '@/validation/task'
 import { type Task } from '@prisma/client'
+import { type UseTRPCQueryResult } from '@trpc/react-query/shared'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ArrowDown, ArrowDownUp, ArrowUp, MoreHorizontal } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { type z } from 'zod'
 
-type TabPageTemplateProps = {
-    filterFn: (task: Task) => boolean
+type TabPageTemplateProps<TError> = {
     icon: React.ReactNode
     title: string
     defaultTask: z.infer<typeof taskInput>
+    fetchData: UseTRPCQueryResult<
+        {
+            incompleted: Task[]
+            completed: Task[]
+        },
+        TError
+    >
 }
 
 const MotionAccordion = motion(Accordion)
-const MotionTaskCard = motion(TaskCard)
 
 type sortingValueProps = {
     label: string
@@ -46,19 +50,14 @@ const sortingValuesObject = {
     starred: { label: 'Importance' }
 } as Record<sortingValues, sortingValueProps>
 
-export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: TabPageTemplateProps) {
-    const query = api.task.all.useQuery()
+export default function TabPageTemplate<TError>({ icon, title, defaultTask, fetchData: query }: TabPageTemplateProps<TError>) {
     const remindersContext = useReminders()
-    const completed = useMemo(() => query.data?.filter((task: Task) => task.completed === true), [query.data])
     const [sortingValue, setSortingValue] = useState<sortingValues>('createdAt')
     const [reversed, setReversed] = useState<boolean>(true)
 
-    const [taskEditorOpen, setTaskEditorOpen] = useState<boolean>(false)
-    const [currentTaskEdit, setCurrentTaskEdit] = useState<Task | undefined>(undefined)
-
     useEffect(() => {
         if (query.data) {
-            remindersContext.addMany(query.data, remindersContext.callbacks.taskReminderCallback)
+            remindersContext.addMany(query.data.incompleted, remindersContext.callbacks.taskReminderCallback)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query.isLoading])
@@ -67,7 +66,7 @@ export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: 
         if (query.isLoading) {
             return undefined
         }
-        let result = query.data?.sort((a, b) => {
+        const result = query.data?.incompleted.sort((a, b) => {
             const aValue = typeof a[sortingValue] === 'string' ? (a[sortingValue] as string).toLowerCase()! : a[sortingValue]!
             const bValue = typeof b[sortingValue] === 'string' ? (b[sortingValue] as string).toLowerCase()! : b[sortingValue]!
 
@@ -76,17 +75,8 @@ export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: 
             return 0
         })
 
-        result = result?.filter((task: Task) => {
-            return filterFn(task)
-        })
-
         return reversed ? result?.reverse() : result
-    }, [filterFn, query.data, query.isLoading, reversed, sortingValue])
-
-    function handleEditTask(task: Task) {
-        setCurrentTaskEdit(task)
-        setTaskEditorOpen(true)
-    }
+    }, [query.data, query.isLoading, reversed, sortingValue])
 
     if (query.isLoading || tasks === undefined) return <div>Loading...</div>
     if (query.isError) return <div>Error</div>
@@ -135,23 +125,9 @@ export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: 
             </header>
             <CreateTaskBox className="px-8" defaultTask={defaultTask} />
             <ScrollArea className="px-8">
-                <ul className="flex flex-col gap-2 py-5">
-                    <AnimatePresence>
-                        {tasks
-                            .filter((task: Task) => task.completed === false)
-                            .map((task: Task) => (
-                                <MotionTaskCard
-                                    key={task.id}
-                                    initial={{ y: -20 }}
-                                    animate={{ y: 0 }}
-                                    task={task}
-                                    onClick={() => handleEditTask(task)}
-                                />
-                            ))}
-                    </AnimatePresence>
-                </ul>
+                <TaskList tasks={tasks} />
                 <AnimatePresence>
-                    {completed?.length !== 0 && (
+                    {query.data?.completed.length !== 0 && (
                         <MotionAccordion
                             initial={{ opacity: 0, scale: 0.5, origin: 'center' }}
                             animate={{ opacity: 1, scale: 1, origin: 'center' }}
@@ -165,22 +141,15 @@ export default function TabPageTemplate({ filterFn, icon, title, defaultTask }: 
                             collapsible
                         >
                             <AccordionItem value="item-1">
-                                <AccordionTrigger>Completed ({completed?.length})</AccordionTrigger>
+                                <AccordionTrigger>Completed ({query.data?.completed.length})</AccordionTrigger>
                                 <AccordionContent asChild>
-                                    <div className="flex flex-col gap-2">
-                                        {tasks
-                                            .filter((task: Task) => task.completed === true)
-                                            .map((task: Task) => (
-                                                <TaskCard key={task.id} task={task} onClick={() => handleEditTask(task)} />
-                                            ))}
-                                    </div>
+                                    <TaskList tasks={query.data?.completed} />
                                 </AccordionContent>
                             </AccordionItem>
                         </MotionAccordion>
                     )}
                 </AnimatePresence>
             </ScrollArea>
-            <TaskEdit open={taskEditorOpen} task={currentTaskEdit!} setOpen={setTaskEditorOpen} />
         </article>
     )
 }

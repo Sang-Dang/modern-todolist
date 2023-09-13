@@ -28,3 +28,7 @@ export const taskUpdateInputPartial = z.object({
     completed: z.boolean().optional(),
     starred: z.boolean().optional()
 })
+
+export const allInput = z.object({
+    fetchType: z.enum(['all', 'starred', 'today', 'planned'])
+})

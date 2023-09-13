@@ -1,4 +1,4 @@
-import TaskContextMenu from '@/components/features/TaskContextMenu'
+import TaskContextMenu from '@/modules/TabPageTemplate/components/TaskContextMenu'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useTaskActions } from '@/context/TaskActionsContext'

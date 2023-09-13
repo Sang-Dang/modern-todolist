@@ -1,15 +1,19 @@
-import TabPageTemplate from '@/pages/tasks/_tabpages/TabPageTemplate'
+import withTabLayout from '@/components/layout/withTabLayout'
+import TabPageTemplate from '@/modules/TabPageTemplate'
 import { Inbox } from 'lucide-react'
 import React from 'react'
+import { api } from '@/utils/api'
 
 type Props = {}
 
-export default function TasksList({}: Props) {
+const index = withTabLayout((props: Props) => {
+    const query = api.task.all.useQuery({ fetchType: 'all' })
+
     return (
         <TabPageTemplate
-            filterFn={() => true}
             icon={<Inbox strokeWidth={1.5} size={25} />}
             title="Inbox"
+            fetchData={query}
             defaultTask={{
                 name: '',
                 description: '',
@@ -19,4 +23,6 @@ export default function TasksList({}: Props) {
             }}
         />
     )
-}
+})
+
+export default index

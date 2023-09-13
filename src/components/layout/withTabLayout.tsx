@@ -15,44 +15,38 @@ import { cn } from '@/utils/helper'
 import { AlertCircle, Calendar, CalendarDays, Cloud, CreditCard, Github, Inbox, Menu, Settings, User } from 'lucide-react'
 import { signOut, useSession } from 'next-auth/react'
 import { useRouter } from 'next/router'
-import Important from '../_tabpages/Important'
-import Planned from '../_tabpages/Planned'
-import TasksList from '../_tabpages/TasksList'
-import Today from '../_tabpages/Today'
+import { type ComponentType, type ReactNode } from 'react'
 
 export const tabs: Tab[] = [
     {
         Icon: <CalendarDays strokeWidth={1.2} size={18} />,
         title: 'Today',
-        url: '/tasks/today',
-        Component: <Today />
+        url: '/tasks/today'
     },
     {
         Icon: <AlertCircle strokeWidth={1.2} size={18} />,
         title: 'Important',
-        url: '/tasks/important',
-        Component: <Important />
+        url: '/tasks/important'
     },
     {
         Icon: <Calendar strokeWidth={1.2} size={18} />,
         title: 'Planned',
-        url: '/tasks/planned',
-        Component: <Planned />
+        url: '/tasks/planned'
     },
     {
         Icon: <Inbox strokeWidth={1.2} size={18} />,
         title: 'Inbox',
-        url: '/tasks/inbox',
-        Component: <TasksList />
+        url: '/tasks/inbox'
     }
 ]
 
-type Props = {}
+type Props = {
+    children: ReactNode
+}
 
-const Homepage = ({}: Props) => {
+const Homepage = ({ children }: Props) => {
     const router = useRouter()
-    const currentTab = router.query.tab! as string[]
-    const currentTabString = '/tasks/'.concat(currentTab?.join('/'))
+    const currentTab = router.pathname
 
     const { data: session } = useSession({
         required: true,
@@ -61,7 +55,7 @@ const Homepage = ({}: Props) => {
         }
     })
 
-    if (!session || !currentTab) {
+    if (!session) {
         return <div className="grid place-items-center">Loading...</div>
     }
 
@@ -139,7 +133,7 @@ const Homepage = ({}: Props) => {
                             variant="ghost"
                             className={cn(
                                 'flex items-center justify-start gap-5 rounded-none px-7 text-[16px] font-[370]',
-                                tab.url === currentTabString && 'group bg-blue-200/50 font-semibold'
+                                tab.url === currentTab && 'group bg-blue-200/50 font-semibold'
                             )}
                             onClick={() => void router.push(tab.url)}
                         >
@@ -148,10 +142,18 @@ const Homepage = ({}: Props) => {
                         </Button>
                     ))}
                 </aside>
-                <div className="h-full w-full bg-[#faf9f8]">{tabs.map((tab) => tab.url === currentTabString && tab.Component)}</div>
+                <div className="h-full w-full bg-[#faf9f8]">{children}</div>
             </main>
         </div>
     )
 }
 
-export default Homepage
+export default function withTabLayout<T extends JSX.IntrinsicAttributes>(Component: ComponentType<T>) {
+    return function comp(props: T) {
+        return (
+            <Homepage>
+                <Component {...props} />
+            </Homepage>
+        )
+    }
+}

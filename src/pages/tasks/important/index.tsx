@@ -1,15 +1,18 @@
-import TabPageTemplate from '@/pages/tasks/_tabpages/TabPageTemplate'
+import withTabLayout from '@/components/layout/withTabLayout'
+import TabPageTemplate from '@/modules/TabPageTemplate'
 import { AlertCircle } from 'lucide-react'
-import React from 'react'
+import { api } from '@/utils/api'
 
 type Props = {}
 
-export default function Important({}: Props) {
+const index = withTabLayout((props: Props) => {
+    const query = api.task.all.useQuery({ fetchType: 'starred' })
+
     return (
         <TabPageTemplate
-            filterFn={(task) => task.starred === true}
             icon={<AlertCircle strokeWidth={1.5} size={25} />}
             title="Important"
+            fetchData={query}
             defaultTask={{
                 name: '',
                 description: '',
@@ -19,4 +22,6 @@ export default function Important({}: Props) {
             }}
         />
     )
-}
+})
+
+export default index
